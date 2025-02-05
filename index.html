@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ROI Calculator for Large Retail Owners</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      text-align: center;
+    }
+    input, select, button {
+      margin: 10px;
+      padding: 10px;
+      font-size: 16px;
+    }
+    .result {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+    .custom-costs {
+      display: none;
+      margin-top: 20px;
+    }
+    .multi-fields {
+      display: none;
+      margin-top: 20px;
+    }
+    .tooltip {
+      text-decoration: underline;
+      color: blue;
+      cursor: pointer;
+    }
+    .tooltip-content {
+      display: none;
+      margin-top: 10px;
+      border: 1px solid #ccc;
+      padding: 10px;
+      background-color: #f9f9f9;
+      text-align: center;
+    }
+    .list {
+      text-align: left;
+      display: inline-block;
+      margin: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>ROI Calculator for Large Retail Owners</h1>
+
+  <label for="num-properties">Number of Properties:</label>
+  <input id="num-properties" type="number" placeholder="e.g., 500" />
+
+  <div class="centered">
+    <label for="inspection-type">Inspection Type:</label>
+    <span>Full Property Inspection</span>
+    <span class="tooltip" onclick="toggleTooltip()">(What's included?)</span>
+  </div>
+
+  <div class="tooltip-content" id="tooltip-content">
+    <p><strong>Included in Full Property Inspection (with traditional inspection costs surveyed from our clients):</strong></p>
+    <div class="list">
+      Roof (RGB/Thermal): $7,000<br>
+      Facade (RGB/Thermal): $3,000<br>
+      Landscaping: $500<br>
+      Pavement: $500
+    </div>
+  </div>
+
+  <label for="inspection-frequency">Inspection Frequency:</label>
+  <select id="inspection-frequency">
+    <option value="1">Annually</option>
+    <option value="4">Quarterly</option>
+    <option value="12">Monthly</option>
+  </select>
+
+  <div>
+    <label for="use-custom-costs">Use Custom Full Property Inspection Cost:</label>
+    <input type="checkbox" id="use-custom-costs" onclick="toggleCustomCosts()">
+  </div>
+
+  <div class="custom-costs" id="custom-costs">
+    <label for="custom-traditional-cost">Traditional Cost per Property:</label>
+    <input id="custom-traditional-cost" type="number" placeholder="e.g., 7000" />
+  </div>
+
+  <div>
+    <label for="use-multi-fields">OR Enter Costs for Each Component:</label>
+    <input type="checkbox" id="use-multi-fields" onclick="toggleMultiFields()">
+  </div>
+
+  <div class="multi-fields" id="multi-fields">
+    <label for="custom-roof">Roof (RGB/Thermal):</label>
+    <input id="custom-roof" type="number" placeholder="e.g., 7000" /><br>
+
+    <label for="custom-facade">Facade (RGB/Thermal):</label>
+    <input id="custom-facade" type="number" placeholder="e.g., 3000" /><br>
+
+    <label for="custom-landscaping">Landscaping:</label>
+    <input id="custom-landscaping" type="number" placeholder="e.g., 500" /><br>
+
+    <label for="custom-pavement">Pavement:</label>
+    <input id="custom-pavement" type="number" placeholder="e.g., 500" />
+  </div>
+
+  <button onclick="calculateROI()">Calculate ROI</button>
+
+  <div class="result" id="result"></div>
+
+  <script>
+    function toggleTooltip() {
+      const tooltipContent = document.getElementById("tooltip-content");
+      tooltipContent.style.display = tooltipContent.style.display === "block" ? "none" : "block";
+    }
+
+    function toggleCustomCosts() {
+      const customCostsDiv = document.getElementById("custom-costs");
+      const useCustomCosts = document.getElementById("use-custom-costs").checked;
+      customCostsDiv.style.display = useCustomCosts ? "block" : "none";
+    }
+
+    function toggleMultiFields() {
+      const multiFieldsDiv = document.getElementById("multi-fields");
+      const useMultiFields = document.getElementById("use-multi-fields").checked;
+      multiFieldsDiv.style.display = useMultiFields ? "block" : "none";
+    }
+
+    function calculateROI() {
+      const numProperties = parseInt(document.getElementById("num-properties").value);
+      const frequency = parseInt(document.getElementById("inspection-frequency").value);
+      const useCustomCosts = document.getElementById("use-custom-costs").checked;
+      const useMultiFields = document.getElementById("use-multi-fields").checked;
+
+      if (isNaN(numProperties) || numProperties <= 0) {
+        document.getElementById("result").innerText = "Please enter a valid number of properties.";
+        return;
+      }
+
+      let traditionalCostPerProperty = 11000; // Default for full inspection
+      let zeitviewCostPerProperty = 2500; // Fixed Zeitview cost
+
+      if (useCustomCosts) {
+        traditionalCostPerProperty = parseFloat(document.getElementById("custom-traditional-cost").value);
+
+        if (isNaN(traditionalCostPerProperty) || traditionalCostPerProperty <= 0) {
+          document.getElementById("result").innerText = "Please enter a valid custom cost.";
+          return;
+        }
+      }
+
+      if (useMultiFields) {
+        const roofCost = parseFloat(document.getElementById("custom-roof").value) || 0;
+        const facadeCost = parseFloat(document.getElementById("custom-facade").value) || 0;
+        const landscapingCost = parseFloat(document.getElementById("custom-landscaping").value) || 0;
+        const pavementCost = parseFloat(document.getElementById("custom-pavement").value) || 0;
+
+        traditionalCostPerProperty = roofCost + facadeCost + landscapingCost + pavementCost;
+
+        if (traditionalCostPerProperty <= 0) {
+          document.getElementById("result").innerText = "Please enter valid component costs.";
+          return;
+        }
+      }
+
+      const totalTraditionalCost = traditionalCostPerProperty * numProperties * frequency;
+      const totalZeitviewCost = zeitviewCostPerProperty * numProperties * frequency;
+      const totalSavings = totalTraditionalCost - totalZeitviewCost;
+
+      document.getElementById("result").innerHTML = `
+        <p>Traditional Inspection Cost: $${totalTraditionalCost.toLocaleString()}</p>
+        <p>Zeitview Cost: $${totalZeitviewCost.toLocaleString()}</p>
+        <p>Total Savings: $${totalSavings.toLocaleString()}</p>
+        <p>Savings Per Property: $${(totalSavings / numProperties).toLocaleString()}</p>
+      `;
+    }
+  </script>
+</body>
+</html>
